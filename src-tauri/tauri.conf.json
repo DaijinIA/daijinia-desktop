@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "productName": "daijinia-desktop",
+  "version": "0.1.0",
+  "identifier": "com.daijin.ia.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "daijinia-desktop",
+        "width": 800,
+        "height": 600,
+        "resizable": false,
+        "hiddenTitle": true,
+        "center": true,
+        "visibleOnAllWorkspaces": true,
+        "titleBarStyle": "Transparent",
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "window": {},
+    "deep-link": {
+      "desktop": {
+        "schemes": ["daijindesktop", "daijin-desktok"]
+      }
+    },
+    "updater": {
+      "windows": {
+        "installMode": "passive"
+      },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY3RjY5N0U3NkYzMEVGQzAKUldUQTd6QnY1NWYyOTJLdTJqTnNydjhmNDBtaEZQOTRZUTdzNVVhMGVHTVZHeDVpRzcwT1dWZEgK",
+      "endpoints": ["https://releases.myapp.com/{{target}}/{{arch}}/{{current_version}}"]
+    }
+  }
+}
