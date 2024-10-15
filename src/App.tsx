@@ -19,9 +19,7 @@ function App() {
   const [loading, setLoading] = useState<string | undefined>(undefined);
   const [leftPanel, setLeftPanel] = useState(true);
   const messagesRef = React.useRef<any>();
-  const [update, setUpdate] = React.useState<{ download: string; version: string } | undefined>(
-    undefined
-  );
+  const [update, setUpdate] = React.useState<boolean>(false);
   const [tokenDefined, setTokenDefined] = useState(false);
 
   const handleCreateChatClick = React.useCallback(async () => {
@@ -127,7 +125,7 @@ function App() {
 
   return (
     <div className="container">
-      {update && <Update />}
+      <Update defineUpdate={setUpdate} />
       <div className="flex" style={{ height: update ? "calc(100vh - 60px)" : "100vh" }}>
         <div className={`menubar ${leftPanel ? "active" : ""}`}>
           <div className="title">

@@ -28,13 +28,6 @@ fn get_cpu_info() -> String {
 }
 
 #[tauri::command]
-fn get_gpu_info() -> String {
-    // Nota: sysinfo não fornece informações detalhadas sobre GPU
-    // Esta é uma implementação simplificada
-    "Informações detalhadas da GPU não disponíveis através do sysinfo".to_string()
-}
-
-#[tauri::command]
 fn get_ram_info() -> String {
     let mut sys = System::new_all();
     sys.refresh_memory();
@@ -116,14 +109,23 @@ fn get_disk_info() -> Result<String, String> {
 }
 
 #[tauri::command]
-fn capture_screen() -> Result<String, String> {
-    let one_second = Duration::new(1, 0);
-    let display = Display::primary().map_err(|e| e.to_string())?;
-    let mut capturer = Capturer::new(display).map_err(|e| e.to_string())?;
+fn capture_screen() -> bool {
+    let one_hundred_ms = Duration::new(0, 100_000_000);
+    let display = match Display::primary() {
+        Ok(display) => display,
+        Err(_) => return false,
+    };
+    
+    let mut capturer = match Capturer::new(display) {
+        Ok(capturer) => capturer,
+        Err(_) => return false,
+    };
 
     let (w, h) = (capturer.width(), capturer.height());
 
     let frame;
+    let mut limit = 5;
+
     loop {
         match capturer.frame() {
             Ok(buffer) => {
@@ -131,8 +133,12 @@ fn capture_screen() -> Result<String, String> {
                 break;
             }
             Err(_) => {
-                thread::sleep(one_second);
-                continue;
+                if limit == 0 {
+                    return false; 
+                } else {
+                    limit -= 1;
+                }
+                thread::sleep(one_hundred_ms);
             }
         }
     }
@@ -149,17 +155,28 @@ fn capture_screen() -> Result<String, String> {
         ]);
     }
 
-    let home_dir = UserDirs::new().ok_or("Não foi possível obter o diretório home")?;
+    let home_dir = match UserDirs::new() {
+        Some(dirs) => dirs,
+        None => return false,
+    };
+    
     let save_dir = home_dir.home_dir().join(".daijinia/screenshot");
 
-    create_dir_all(&save_dir).map_err(|e| e.to_string())?;
+    if let Err(e) = create_dir_all(&save_dir) {
+        eprintln!("Erro ao criar diretório: {}", e);
+        return false;
+    }
 
     let path = save_dir.join("screenshot.png");
 
-    imgbuf.save(path.clone()).map_err(|e| e.to_string())?;
+    if let Err(e) = imgbuf.save(&path) {
+        eprintln!("Erro ao salvar imagem: {}", e);
+        return false;
+    }
 
-    Ok(format!("Screenshot salva em: {}", path.to_string_lossy()))
+    true
 }
+
 
 // Atualize a função run() para incluir os novos comandos
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -196,7 +213,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             get_cpu_info,
-            get_gpu_info,
             get_ram_info,
             get_running_processes,
             get_disk_info,

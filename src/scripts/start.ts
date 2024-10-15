@@ -10,8 +10,20 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
+import { TrayIcon } from "@tauri-apps/api/tray";
+import { defaultWindowIcon } from "@tauri-apps/api/app";
+import { Menu } from "@tauri-apps/api/menu";
+import { exit } from "@tauri-apps/plugin-process";
+
+async function getWallpaperColor() {
+  try {
+  } catch {
+    return "";
+  }
+}
 
 async function main() {
+  await getWallpaperColor();
   let permissionGranted = await isPermissionGranted();
 
   if (!permissionGranted) {
@@ -28,10 +40,10 @@ async function main() {
 
   if (!(await isRegistered("Alt+J"))) {
     await register(["Alt+J"], async () => {
-      await invoke("capture_screen");
       const textarea = document.querySelector<HTMLDivElement>("[data-textarea]");
-      textarea?.focus();
+      await invoke("capture_screen");
       window.show();
+      textarea?.focus();
     });
   }
 
@@ -73,6 +85,28 @@ async function main() {
 
   window.setSize(new LogicalSize(width, height));
   window.setPosition(new LogicalPosition(x, y));
+
+  const menu = await Menu.new({
+    items: [
+      {
+        id: "quit",
+        text: "Quit",
+        action: async () => {
+          sendNotification({
+            title: "DaijinIA closed",
+            body: "DaijinIA has been closed, you can't open the copilot with the shortcut anymore.",
+          });
+          await exit(0);
+        },
+      },
+    ],
+  });
+
+  await TrayIcon.new({
+    icon: (await defaultWindowIcon()) ?? "",
+    menu: menu,
+    menuOnLeftClick: true,
+  });
 }
 
 main();

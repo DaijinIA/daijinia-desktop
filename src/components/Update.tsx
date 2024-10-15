@@ -2,17 +2,25 @@ import React from "react";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 
-export default function Update() {
+type Props = {
+  defineUpdate: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+export default function Update({ defineUpdate }: Props) {
   const [update, setUpdate] = React.useState<1 | 2 | 3>(1);
 
   React.useEffect(() => {
     async function update() {
       try {
         const update = await check();
+        console.log(update);
         if (update?.available) {
           setUpdate(2);
+          defineUpdate(true);
         }
-      } catch {}
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     update();
